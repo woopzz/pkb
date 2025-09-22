@@ -1,3 +1,6 @@
 [submodule "pkb-notes"]
 	path = notes
 	url = https://github.com/woopzz/pkb-notes
+[submodule "users"]
+	path = users
+	url = https://github.com/woopzz/pkb-users
