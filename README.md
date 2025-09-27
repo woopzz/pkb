@@ -1,6 +1,6 @@
 # PKB
 
-A personal knowledge base web app.
+A web API for the personal knowledge base.
 
 ### Services
 
