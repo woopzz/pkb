@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notes-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notes
+  template:
+    metadata:
+      labels:
+        app: notes
+    spec:
+      containers:
+        - name: notes-app
+          image: pkb-notes:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          env:
+            - name: POSTGRES_HOST
+              value: "notes-db"
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: notes
+                  key: postgres_user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: notes
+                  key: postgres_password
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: notes
+                  key: postgres_db
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: notes
+                  key: jwt_secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notes-service
+spec:
+  selector:
+    app: notes
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000

@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: main-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: pkb.local
+      http:
+        paths:
+          - path: /api/v\d+/(users|access-token)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: users-service
+                port:
+                  number: 8000
+          - path: /api/v\d+/(notes|tags)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: notes-service
+                port:
+                  number: 8000

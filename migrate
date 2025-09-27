@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+# https://minikube.sigs.k8s.io/docs/handbook/pushing/#1-pushing-directly-to-the-in-cluster-docker-daemon-docker-env
+eval $(minikube docker-env)
+
+minikube kubectl -- apply -f ./k8s/users-migrate-job.yaml
+minikube kubectl -- apply -f ./k8s/notes-migrate-job.yaml
