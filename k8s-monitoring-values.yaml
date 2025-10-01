@@ -1,0 +1,57 @@
+---
+cluster:
+  name: k8s-monitoring
+
+destinations:
+  - name: loki
+    type: loki
+    url: http://loki-gateway.default.svc.cluster.local/loki/api/v1/push
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus-server.default.svc.cluster.local/api/v1/write
+
+clusterMetrics:
+  enabled: true
+
+  windows-exporter:
+    enabled: false
+    deploy: false
+
+clusterEvents:
+  enabled: true
+  collector: alloy-logs
+
+nodeLogs:
+  enabled: false
+
+podLogs:
+  enabled: true
+  gatherMethod: kubernetesApi
+  collector: alloy-logs
+  labelsToKeep: ["app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name"]
+  structuredMetadata:
+    pod: pod
+
+annotationAutodiscovery:
+  enabled: true
+
+alloy-singleton:
+  enabled: false
+
+alloy-metrics:
+  enabled: true
+
+alloy-logs:
+  enabled: true
+  alloy:
+    mounts:
+      varlog: false
+      dockercontainers: false
+    clustering:
+      enabled: true
+
+alloy-profiles:
+  enabled: false
+
+alloy-receiver:
+  enabled: false

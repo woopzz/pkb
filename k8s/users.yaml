@@ -11,6 +11,8 @@ spec:
     metadata:
       labels:
         app: users
+      annotations:
+        k8s.grafana.com/scrape: 'true'
     spec:
       containers:
         - name: users-app

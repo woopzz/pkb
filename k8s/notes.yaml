@@ -11,6 +11,8 @@ spec:
     metadata:
       labels:
         app: notes
+      annotations:
+        k8s.grafana.com/scrape: 'true'
     spec:
       containers:
         - name: notes-app

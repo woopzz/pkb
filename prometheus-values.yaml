@@ -1,0 +1,23 @@
+---
+rbac:
+  create: false
+
+serviceAccounts:
+  server:
+    create: false
+
+alertmanager:
+  enabled: false
+
+kube-state-metrics:
+  enabled: false
+
+prometheus-node-exporter:
+  enabled: false
+
+prometheus-pushgateway:
+  enabled: false
+
+server:
+  extraArgs:
+    web.enable-remote-write-receiver: null
