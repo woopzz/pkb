@@ -1,0 +1,462 @@
+users:
+  name: users
+  replicas: 1
+
+  podValues:
+    image:
+      name: pkb-users
+      tag: latest
+      pullPolicy: Never
+    env:
+      - name: POSTGRES_HOST
+        value: "users-db-service"
+      - name: POSTGRES_PORT
+        value: "5432"
+      - name: POSTGRES_USER
+        valueFrom:
+          secretKeyRef:
+            name: pkb-users
+            key: postgres_user
+      - name: POSTGRES_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: pkb-users
+            key: postgres_password
+      - name: POSTGRES_DB
+        valueFrom:
+          secretKeyRef:
+            name: pkb-users
+            key: postgres_db
+      - name: JWT_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: pkb-users
+            key: jwt_secret
+
+  serviceValues:
+    name: users
+    ports:
+      - protocol: TCP
+        port: 8000
+        targetPort: 8000
+
+  migrations:
+  - name: users-migrate
+    image:
+      name: pkb-users
+      tag: latest
+      pullPolicy: Never
+      command: ["/app/.venv/bin/alembic", "-c", "/app/alembic.ini", "upgrade", "head"]
+    env:
+      - name: POSTGRES_HOST
+        value: "users-db-service"
+      - name: POSTGRES_PORT
+        value: "5432"
+      - name: POSTGRES_USER
+        valueFrom:
+          secretKeyRef:
+            name: pkb-users
+            key: postgres_user
+      - name: POSTGRES_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: pkb-users
+            key: postgres_password
+      - name: POSTGRES_DB
+        valueFrom:
+          secretKeyRef:
+            name: pkb-users
+            key: postgres_db
+
+usersDatabase:
+  name: users-db
+  replicas: 1
+
+  podValues:
+    image:
+      name: postgres
+      tag: 17.6-bookworm
+      pullPolicy: IfNotPresent
+    env:
+      - name: POSTGRES_USER
+        valueFrom:
+          secretKeyRef:
+            name: pkb-users
+            key: postgres_user
+      - name: POSTGRES_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: pkb-users
+            key: postgres_password
+      - name: POSTGRES_DB
+        valueFrom:
+          secretKeyRef:
+            name: pkb-users
+            key: postgres_db
+
+  serviceValues:
+    name: users-db
+    ports:
+      - protocol: TCP
+        port: 5432
+        targetPort: 5432
+
+notes:
+  name: notes
+  replicas: 1
+
+  podValues:
+    image:
+      name: pkb-notes
+      tag: latest
+      pullPolicy: Never
+    env:
+      - name: POSTGRES_HOST
+        value: "notes-db-service"
+      - name: POSTGRES_PORT
+        value: "5432"
+      - name: POSTGRES_USER
+        valueFrom:
+          secretKeyRef:
+            name: pkb-notes
+            key: postgres_user
+      - name: POSTGRES_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: pkb-notes
+            key: postgres_password
+      - name: POSTGRES_DB
+        valueFrom:
+          secretKeyRef:
+            name: pkb-notes
+            key: postgres_db
+      - name: JWT_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: pkb-notes
+            key: jwt_secret
+
+  serviceValues:
+    name: notes
+    ports:
+      - protocol: TCP
+        port: 8000
+        targetPort: 8000
+
+  migrations:
+    - name: notes-migrate
+      image:
+        name: pkb-notes
+        tag: latest
+        pullPolicy: Never
+        command: ["/app/.venv/bin/alembic", "-c", "/app/alembic.ini", "upgrade", "head"]
+      env:
+        - name: POSTGRES_HOST
+          value: "notes-db-service"
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: pkb-notes
+              key: postgres_user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pkb-notes
+              key: postgres_password
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: pkb-notes
+              key: postgres_db
+
+notesDatabase:
+  name: notes-db
+  replicas: 1
+
+  podValues:
+    image:
+      name: postgres
+      tag: 17.6-bookworm
+      pullPolicy: IfNotPresent
+    env:
+      - name: POSTGRES_USER
+        valueFrom:
+          secretKeyRef:
+            name: pkb-notes
+            key: postgres_user
+      - name: POSTGRES_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: pkb-notes
+            key: postgres_password
+      - name: POSTGRES_DB
+        valueFrom:
+          secretKeyRef:
+            name: pkb-notes
+            key: postgres_db
+
+  serviceValues:
+    name: notes-db
+    ports:
+      - protocol: TCP
+        port: 5432
+        targetPort: 5432
+
+ingress:
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/limit-connections: "50"
+    nginx.ingress.kubernetes.io/limit-rpm: "240"
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: "2"
+  hosts:
+    - host: pkb.local
+      paths:
+        - path: /api/v\d+/(users|access-token)
+          pathType: ImplementationSpecific
+          backend:
+            service:
+              name: users-service
+              port:
+                number: 8000
+        - path: /api/v\d+/(notes|tags)
+          pathType: ImplementationSpecific
+          backend:
+            service:
+              name: notes-service
+              port:
+                number: 8000
+
+prometheus:
+  rbac:
+    create: false
+
+  serviceAccounts:
+    server:
+      create: false
+
+  alertmanager:
+    enabled: false
+
+  kube-state-metrics:
+    enabled: false
+
+  prometheus-node-exporter:
+    enabled: false
+
+  prometheus-pushgateway:
+    enabled: false
+
+  server:
+    extraArgs:
+      web.enable-remote-write-receiver: null
+
+loki:
+  loki:
+    auth_enabled: false
+    commonConfig:
+      replication_factor: 1
+    schemaConfig:
+      configs:
+        - from: 2024-04-01
+          store: tsdb
+          object_store: s3
+          schema: v13
+          index:
+            prefix: loki_index_
+            period: 24h
+    ingester:
+      chunk_encoding: snappy
+    tracing:
+      enabled: true
+    pattern_ingester:
+        enabled: true
+    limits_config:
+      allow_structured_metadata: true
+      volume_enabled: true
+    ruler:
+      enable_api: true
+    querier:
+      # Default is 4, if you have enough memory and CPU you can increase, reduce if OOMing
+      max_concurrent: 4
+
+  minio:
+    enabled: true
+
+  deploymentMode: SingleBinary
+  singleBinary:
+    replicas: 1
+    resources:
+      limits:
+        cpu: 4
+        memory: 4Gi
+      requests:
+        cpu: 2
+        memory: 2Gi
+    extraEnv:
+      # Keep a little bit lower than memory limits
+      - name: GOMEMLIMIT
+        value: 3750MiB
+
+  chunksCache:
+    # default is 500MB, with limited memory keep this smaller
+    writebackSizeLimit: 10MB
+
+
+  # Zero out replica counts of other deployment modes
+  backend:
+    replicas: 0
+  read:
+    replicas: 0
+  write:
+    replicas: 0
+
+  ingester:
+    replicas: 0
+  querier:
+    replicas: 0
+  queryFrontend:
+    replicas: 0
+  queryScheduler:
+    replicas: 0
+  distributor:
+    replicas: 0
+  compactor:
+    replicas: 0
+  indexGateway:
+    replicas: 0
+  bloomCompactor:
+    replicas: 0
+  bloomGateway:
+    replicas: 0
+
+grafana:
+  bac:
+    create: false
+
+  serviceAccount:
+    create: false
+
+  testFramework:
+    enabled: false
+
+  service:
+    enabled: true
+    type: ClusterIP
+
+  ingress:
+    enabled: true
+    hosts:
+      - pkb.grafana.local
+
+  persistence:
+    enabled: true
+
+  admin:
+    existingSecret: "pkb-grafana"
+    userKey: user
+    passwordKey: password
+
+  datasources:
+    datasources.yaml:
+      # Configuration file version
+      apiVersion: 1
+      datasources:
+        # <string, required> Sets the name you use to refer to
+        # the data source in panels and queries.
+      - name: Loki
+
+        # <string, required> Sets the data source type.
+        type: loki
+
+        # <string, required> Sets the access mode, either
+        # proxy or direct (Server or Browser in the UI).
+        # Some data sources are incompatible with any setting
+        # but proxy (Server).
+        access: proxy
+
+        # <string> Sets the data source's URL, including the port.
+        url: http://loki-gateway.default.svc.cluster.local:80
+
+        # <bool> Enables basic authorization.
+        basicAuth: false
+
+        # <bool> Toggles whether the data source is pre-selected
+        # for new panels. You can set only one default
+        # data source per organization.
+        isDefault: false
+
+        # <int> Sets the version. Used to compare versions when
+        # updating. Ignored when creating a new data source.
+        version: 1
+
+        # <bool> Allows users to edit data sources from the Grafana UI.
+        editable: false
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus-server.default.svc.cluster.local:80
+        basicAuth: false
+        isDefault: false
+        version: 1
+        editable: false
+
+k8s-monitoring:
+  cluster:
+    name: k8s-monitoring
+
+  destinations:
+    - name: loki
+      type: loki
+      url: http://loki-gateway.default.svc.cluster.local/loki/api/v1/push
+    - name: prometheus
+      type: prometheus
+      url: http://prometheus-server.default.svc.cluster.local/api/v1/write
+
+  clusterMetrics:
+    enabled: true
+
+    windows-exporter:
+      enabled: false
+      deploy: false
+
+  clusterEvents:
+    enabled: true
+    collector: alloy-logs
+
+  nodeLogs:
+    enabled: false
+
+  podLogs:
+    enabled: true
+    gatherMethod: kubernetesApi
+    collector: alloy-logs
+    labelsToKeep: ["app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name"]
+    structuredMetadata:
+      pod: pod
+
+  annotationAutodiscovery:
+    enabled: true
+
+  alloy-singleton:
+    enabled: false
+
+  alloy-metrics:
+    enabled: true
+
+  alloy-logs:
+    enabled: true
+    alloy:
+      mounts:
+        varlog: false
+        dockercontainers: false
+      clustering:
+        enabled: true
+
+  alloy-profiles:
+    enabled: false
+
+  alloy-receiver:
+    enabled: false

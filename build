@@ -9,5 +9,3 @@ eval $(minikube docker-env)
 
 docker build -t pkb-users ./users
 docker build -t pkb-notes ./notes
-
-find ./k8s -name "*.yaml" | grep -v migrate | xargs -I % minikube kubectl -- apply -f %

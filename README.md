@@ -19,43 +19,38 @@ minikube start
 minikube addons enable ingress
 ```
 4. [Install Helm v3.](https://helm.sh/docs/intro/install/)
-5. Install secrets.
-```bash
-kubectl apply -f ./k8s/secret.yaml
-```
-6. Add Helm repositories and install packages:
+5. Add Helm repositories which contain the dependencies for the app.
 ```bash
 # Add Prometheus Helm repository.
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts && helm repo update prometheus-community
-# Install Prometheus.
-helm install --values prometheus-values.yaml prometheus prometheus-community/prometheus
-
 # Add Grafana Helm repository.
 helm repo add grafana https://grafana.github.io/helm-charts && helm repo update grafana
-# Install Loki.
-helm install --values loki-values.yaml loki grafana/loki
-# Install Grafana.
-helm install --values grafana-values.yaml grafana grafana/grafana
-# Install k8s monitoring.
-helm install --values ./k8s-monitoring-values.yaml k8s-monitoring grafana/k8s-monitoring
 ```
-7. Add a DNS entry so it looks like the app is hosted on http://pkb.local.
+6. Build Docker containers.
 ```bash
-echo "$( minikube ip ) pkb.local" | sudo tee -a /etc/hosts
-echo "$( minikube ip ) pkb.grafana.local" | sudo tee -a /etc/hosts
+./build
 ```
-8. Deploy the app.
+7. Install secrets.
 ```bash
-./run
+kubectl apply -f ./secrets.yaml
 ```
-9. Run migrations.
+8. Install the PKB chart.
 ```bash
-./migrate
+# Load dependencies.
+(cd pkb && helm dependency build )
+# Install the app.
+helm install pkb ./pkb
 ```
-10. Add DNS entries.
+9. Add new DNS entry to /etc/hosts so it looks like the app is hosted on http://pkb.local.
+
+**Do not forget to remove the entry when you're done with the app!**
+
 ```bash
-echo "$( minikube ip ) pkb.local" | sudo tee -a /etc/hosts
-echo "$( minikube ip ) pkb.grafana.local" | sudo tee -a /etc/hosts
+echo "$( minikube ip ) pkb.local pkb.grafana.local" | sudo tee -a /etc/hosts
+```
+10. Wait a bit until the whole thing is up. If you want you can monitor it with the minikube dashboard:
+```bash
+minikube dashboard
 ```
 11. Test the API.
 ```bash
