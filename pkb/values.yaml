@@ -4,9 +4,8 @@ users:
 
   podValues:
     image:
-      name: pkb-users
-      tag: latest
-      pullPolicy: Never
+      name: ghcr.io/woopzz/pkb-users
+      pullPolicy: IfNotPresent
     env:
       - name: POSTGRES_HOST
         value: "users-db-service"
@@ -43,9 +42,8 @@ users:
   migrations:
   - name: users-migrate
     image:
-      name: pkb-users
-      tag: latest
-      pullPolicy: Never
+      name: ghcr.io/woopzz/pkb-users
+      pullPolicy: IfNotPresent
       command: ["/app/.venv/bin/alembic", "-c", "/app/alembic.ini", "upgrade", "head"]
     env:
       - name: POSTGRES_HOST
@@ -107,9 +105,8 @@ notes:
 
   podValues:
     image:
-      name: pkb-notes
-      tag: latest
-      pullPolicy: Never
+      name: ghcr.io/woopzz/pkb-notes
+      pullPolicy: IfNotPresent
     env:
       - name: POSTGRES_HOST
         value: "notes-db-service"
@@ -146,9 +143,8 @@ notes:
   migrations:
     - name: notes-migrate
       image:
-        name: pkb-notes
-        tag: latest
-        pullPolicy: Never
+        name: ghcr.io/woopzz/pkb-notes
+        pullPolicy: IfNotPresent
         command: ["/app/.venv/bin/alembic", "-c", "/app/alembic.ini", "upgrade", "head"]
       env:
         - name: POSTGRES_HOST

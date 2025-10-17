@@ -26,22 +26,18 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 # Add Grafana Helm repository.
 helm repo add grafana https://grafana.github.io/helm-charts && helm repo update grafana
 ```
-6. Build Docker containers.
-```bash
-./build
-```
-7. Install secrets.
+6. Install secrets.
 ```bash
 kubectl apply -f ./secrets.yaml
 ```
-8. Install the PKB chart.
+7. Install the PKB chart.
 ```bash
 # Load dependencies.
 (cd pkb && helm dependency build )
 # Install the app.
 helm install pkb ./pkb
 ```
-9. Add new DNS entry to /etc/hosts so it looks like the app is hosted on http://pkb.local.
+8. Add new DNS entry to /etc/hosts so it looks like the app is hosted on http://pkb.local.
 
 **Do not forget to remove the entry when you're done with the app!**
 
