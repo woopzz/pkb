@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: "{{- .name -}}-postgres"
-          image: "{{ .podValues.image.name }}:{{ .podValues.image.tag | default .appVersion }}"
+          image: "{{ .podValues.image.name }}:{{ .podValues.image.tag | default "latest" }}"
           imagePullPolicy: {{ .podValues.image.pullPolicy | quote }}
           ports:
             - containerPort: 5432

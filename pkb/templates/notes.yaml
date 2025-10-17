@@ -1,9 +1,10 @@
-{{ include "pkb.deployment" (dict "name" .Values.notes.name "replicas" .Values.notes.replicas "podValues" .Values.notes.podValues ) }}
+{{ $appVersion := .Chart.AppVersion }}
+
+{{ include "pkb.deployment" (dict "name" .Values.notes.name "replicas" .Values.notes.replicas "appVersion" $appVersion "podValues" .Values.notes.podValues ) }}
 
 ---
 {{ include "pkb.service" .Values.notes.serviceValues }}
 
-{{ $appVersion := .Chart.AppVersion }}
 {{ range .Values.notes.migrations }}
 ---
 {{ include "pkb.migration" (dict "migration" . "appVersion" $appVersion) }}
